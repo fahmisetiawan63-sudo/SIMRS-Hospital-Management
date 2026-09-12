@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIMRS OTTEN 32 — Dokumentasi Sistem</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F7F9F8;
+    --surface: #FFFFFF;
+    --ink: #152322;
+    --ink-soft: #445150;
+    --line: #D8E0DE;
+    --teal: #0E7C74;
+    --teal-deep: #0A5F59;
+    --clay: #B85C2E;
+    --tag-active: #E8F3F1;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  h1,h2,h3{
+    font-family:"Source Serif 4", serif;
+    font-weight:600;
+    color:var(--ink);
+    line-height:1.15;
+    margin:0 0 0.5em;
+  }
+  code, .mono, .pill, table td.mono-cell{
+    font-family:"IBM Plex Mono", monospace;
+  }
+  a{color:var(--teal-deep);}
+  p{max-width:68ch;}
+
+  /* ---- Layout shell ---- */
+  .shell{
+    display:grid;
+    grid-template-columns: 260px 1fr;
+    min-height:100vh;
+  }
+  @media (max-width: 860px){
+    .shell{grid-template-columns: 1fr;}
+    .chart-tabs{position:static; height:auto; border-right:none; border-bottom:1px solid var(--line);}
+  }
+
+  /* ---- Sidebar: "chart tabs" metaphor ---- */
+  .chart-tabs{
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+    background:var(--surface);
+    border-right:1px solid var(--line);
+    padding:28px 0 40px;
+  }
+  .chart-tabs .brand{
+    padding:0 24px 20px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:8px;
+  }
+  .chart-tabs .brand .rec-no{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    color:var(--teal-deep);
+    letter-spacing:0.03em;
+  }
+  .chart-tabs .brand h1{
+    font-size:22px;
+    margin:6px 0 2px;
+  }
+  .chart-tabs .brand .sub{
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .chart-tabs nav{padding-top:8px;}
+  .chart-tabs .group-label{
+    font-size:11px;
+    color:var(--ink-soft);
+    padding:14px 24px 6px;
+  }
+  .chart-tabs a.tab{
+    display:block;
+    position:relative;
+    padding:9px 24px 9px 20px;
+    font-size:14px;
+    color:var(--ink-soft);
+    text-decoration:none;
+    border-left:3px solid transparent;
+  }
+  .chart-tabs a.tab:hover{
+    background:var(--tag-active);
+    color:var(--ink);
+  }
+  .chart-tabs a.tab.active{
+    background:var(--tag-active);
+    color:var(--teal-deep);
+    border-left-color:var(--teal);
+    font-weight:500;
+  }
+
+  /* ---- Main content ---- */
+  main{padding: 56px 48px 100px; max-width:920px;}
+  @media (max-width:600px){ main{padding:36px 20px 80px;} }
+
+  section{margin-bottom:76px; scroll-margin-top:24px;}
+  section .kicker{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:12px;
+    color:var(--teal-deep);
+    margin-bottom:6px;
+  }
+  section h2{font-size:30px;}
+  section h3{font-size:19px; margin-top:28px;}
+
+  /* hero */
+  .hero{
+    padding-bottom:40px;
+    border-bottom:1px solid var(--line);
+    margin-bottom:56px;
+  }
+  .hero .rec-no{font-family:"IBM Plex Mono",monospace; font-size:13px; color:var(--teal-deep);}
+  .hero h1{font-size:44px; margin:10px 0 14px; max-width:14ch;}
+  .hero p.lede{font-size:18px; color:var(--ink-soft); max-width:56ch;}
+  .hero .stat-row{
+    display:flex; gap:36px; margin-top:32px; flex-wrap:wrap;
+  }
+  .hero .stat{border-left:2px solid var(--teal); padding-left:14px;}
+  .hero .stat .num{font-family:"Source Serif 4", serif; font-size:30px; font-weight:600; display:block;}
+  .hero .stat .label{font-size:13px; color:var(--ink-soft);}
+
+  /* module record panels (not rounded SaaS cards) */
+  .record{
+    border:1px solid var(--line);
+    background:var(--surface);
+    margin-bottom:18px;
+  }
+  .record .record-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 20px;
+    border-bottom:1px solid var(--line);
+    background:#FAFCFB;
+  }
+  .record .record-head h3{margin:0; font-size:17px;}
+  .record .record-head .status{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11px;
+    color:var(--teal-deep);
+    background:var(--tag-active);
+    padding:3px 8px;
+    border:1px solid var(--teal);
+  }
+  .record .record-body{padding:18px 20px;}
+  .record ul{margin:8px 0 0; padding-left:20px;}
+  .record li{margin-bottom:4px; font-size:14.5px; color:var(--ink-soft);}
+  .record .entities{
+    margin-top:10px; font-size:13px; color:var(--ink-soft);
+  }
+  .record .entities .mono{color:var(--teal-deep);}
+
+  /* two-col grid for module records */
+  .module-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:700px){ .module-grid{grid-template-columns:1fr;} }
+
+  /* tables */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+    font-size:14px;
+  }
+  th,td{
+    text-align:left;
+    padding:9px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    font-weight:500;
+    border-bottom:2px solid var(--ink);
+  }
+  td.mono-cell{color:var(--teal-deep); font-size:13px;}
+
+  /* architecture stack diagram */
+  .stack-diagram{
+    display:flex; flex-direction:column; gap:0;
+    margin:24px 0;
+    max-width:520px;
+  }
+  .stack-layer{
+    border:1px solid var(--ink);
+    border-bottom:none;
+    padding:14px 18px;
+    background:var(--surface);
+    font-family:"IBM Plex Mono",monospace;
+    font-size:13px;
+  }
+  .stack-layer:last-child{border-bottom:1px solid var(--ink);}
+  .stack-layer .layer-title{font-weight:500; color:var(--ink);}
+  .stack-layer .layer-desc{color:var(--ink-soft); font-size:12px; margin-top:2px;}
+  .stack-arrow{
+    text-align:center; font-size:12px; color:var(--ink-soft);
+    padding:2px 0;
+  }
+
+  /* roadmap timeline (genuine sequence -> numbering justified) */
+  .timeline{border-left:2px solid var(--line); padding-left:24px; margin-left:6px;}
+  .phase{position:relative; margin-bottom:32px;}
+  .phase::before{
+    content:attr(data-phase);
+    position:absolute; left:-37px; top:0;
+    width:24px; height:24px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--teal); color:#fff;
+    font-family:"IBM Plex Mono",monospace; font-size:12px;
+    border-radius:50%;
+  }
+  .phase h3{font-size:16px; margin-bottom:2px;}
+  .phase .when{font-size:12.5px; color:var(--ink-soft); margin-bottom:8px;}
+  .phase ul{margin:6px 0 0; padding-left:18px; font-size:14px; color:var(--ink-soft);}
+
+  /* code block */
+  pre{
+    background:#101C1B;
+    color:#DDEEEB;
+    padding:16px 18px;
+    overflow-x:auto;
+    font-family:"IBM Plex Mono",monospace;
+    font-size:13px;
+    line-height:1.55;
+    border:1px solid var(--ink);
+  }
+  pre .cmt{color:#7FA39D;}
+
+  .tag-row{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+  .tag{
+    font-family:"IBM Plex Mono",monospace;
+    font-size:12px;
+    padding:4px 10px;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    background:var(--surface);
+  }
+
+  footer{
+    border-top:1px solid var(--line);
+    padding:28px 48px 40px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  footer a{color:var(--teal-deep);}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="chart-tabs">
+    <div class="brand">
+      <div class="rec-no">REKAM SISTEM · OTTEN 32</div>
+      <h1>SIMRS</h1>
+      <div class="sub">Sistem Informasi Manajemen Rumah Sakit</div>
+    </div>
+    <nav id="sidenav">
+      <div class="group-label">RINGKASAN</div>
+      <a class="tab" href="#overview">Overview Sistem</a>
+      <a class="tab" href="#status">Status Proyek</a>
+      <div class="group-label">MODUL</div>
+      <a class="tab" href="#modules">Modul Bisnis</a>
+      <a class="tab" href="#database">Skema Database</a>
+      <div class="group-label">TEKNIS</div>
+      <a class="tab" href="#architecture">Arsitektur</a>
+      <a class="tab" href="#stack">Teknologi</a>
+      <a class="tab" href="#api">Endpoint API</a>
+      <div class="group-label">JALANKAN</div>
+      <a class="tab" href="#quickstart">Quick Start</a>
+      <a class="tab" href="#roadmap">Roadmap</a>
+      <a class="tab" href="#contact">Kontak</a>
+    </nav>
+  </aside>
+
+  <main>
+
+    <section class="hero" id="top">
+      <div class="rec-no">v1.0.0 · Beta produksi · diperbarui 12 Sep 2026</div>
+      <h1>SIMRS OTTEN 32</h1>
+      <p class="lede">Sistem manajemen rumah sakit terintegrasi untuk rumah sakit medium — menyatukan pendaftaran pasien, rekam medis elektronik, farmasi, laboratorium, radiologi, dan billing dalam satu arsitektur berlapis berbasis Spring Boot.</p>
+      <div class="stat-row">
+        <div class="stat"><span class="num">6</span><span class="label">modul bisnis inti</span></div>
+        <div class="stat"><span class="num">65+</span><span class="label">berkas kode disiapkan</span></div>
+        <div class="stat"><span class="num">7</span><span class="label">tabel database inti</span></div>
+        <div class="stat"><span class="num">3</span><span class="label">modul Maven (common/core/api)</span></div>
+      </div>
+    </section>
+
+    <section id="overview">
+      <div class="kicker">01 — OVERVIEW</div>
+      <h2>Dibangun untuk operasional 1000+ pasien/hari</h2>
+      <p>SIMRS OTTEN 32 dirancang sebagai sistem modular yang mendigitalkan proses inti rumah sakit: dari pasien masuk di UGD, konsultasi poliklinik, hingga penagihan akhir. Setiap unit — gawat darurat, rawat jalan, rawat inap, radiologi, laboratorium, dan apotek — punya alur data yang saling terhubung lewat lapisan API yang sama.</p>
+      <p>Visi sistem ini adalah efisiensi operasional lewat digitalisasi penuh manajemen pasien, integrasi data medis-administratif, serta keamanan dan privasi data yang ketat.</p>
+    </section>
+
+    <section id="status">
+      <div class="kicker">02 — STATUS</div>
+      <h2>Yang sudah selesai, yang masih berjalan</h2>
+      <div class="module-grid">
+        <div class="record">
+          <div class="record-head"><h3>Selesai</h3><span class="status">READY</span></div>
+          <div class="record-body">
+            <ul>
+              <li>Setup proyek &amp; struktur modul</li>
+              <li>Skema database &amp; migrasi Flyway</li>
+              <li>6 modul bisnis inti (lihat bawah)</li>
+              <li>REST controller &amp; penanganan error terpusat</li>
+              <li>Dokumentasi API dengan Swagger/OpenAPI</li>
+            </ul>
+          </div>
+        </div>
+        <div class="record">
+          <div class="record-head"><h3>Dalam pengerjaan</h3><span class="status" style="color:var(--clay); border-color:var(--clay); background:#FBEEE6;">BERJALAN</span></div>
+          <div class="record-body">
+            <ul>
+              <li>Autentikasi JWT &amp; RBAC</li>
+              <li>Unit &amp; integration test</li>
+              <li>Modul manajemen staf &amp; inventory</li>
+              <li>Aplikasi frontend (React/Angular)</li>
+              <li>Pipeline CI/CD</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="modules">
+      <div class="kicker">03 — MODUL</div>
+      <h2>Enam modul bisnis inti</h2>
+      <p>Setiap modul memiliki entity database, service layer, dan endpoint REST sendiri, disusun dalam paket terpisah di dalam <code>simrs-core</code>.</p>
+
+      <div class="record">
+        <div class="record-head"><h3>Manajemen Pasien</h3><span class="status">8 endpoint</span></div>
+        <div class="record-body">
+          <ul>
+            <li>Registrasi &amp; verifikasi data pasien baru</li>
+            <li>Penomoran rekam medis otomatis</li>
+            <li>Pencarian &amp; filter pasien, verifikasi BPJS/asuransi</li>
+          </ul>
+          <div class="entities">Entity: <span class="mono">Patient, PatientContact, PatientInsurance, PatientMedicalHistory</span></div>
+        </div>
+      </div>
+
+      <div class="record">
+        <div class="record-head"><h3>Rekam Medis Elektronik (EMR)</h3><span class="status">multi-user</span></div>
+        <div class="record-body">
+          <ul>
+            <li>Riwayat kunjungan, diagnosis, dan resep digital</li>
+            <li>Catatan klinis &amp; ringkasan pemulangan pasien</li>
+            <li>Akses berjenjang untuk dokter, perawat, dan admin</li>
+          </ul>
+          <div class="entities">Entity: <span class="mono">MedicalRecord, Diagnosis, ClinicalNotes, VitalSigns</span></div>
+        </div>
+      </div>
+
+      <div class="module-grid">
+        <div class="record">
+          <div class="record-head"><h3>Farmasi</h3><span class="status">stok</span></div>
+          <div class="record-body">
+            <ul>
+              <li>Inventori &amp; pembelian obat</li>
+              <li>Pemantauan kedaluwarsa &amp; stok menipis</li>
+              <li>Dispensing berbasis resep digital</li>
+            </ul>
+            <div class="entities">Entity: <span class="mono">Medicine, MedicineStock, Prescription</span></div>
+          </div>
+        </div>
+        <div class="record">
+          <div class="record-head"><h3>Laboratorium</h3><span class="status">3 status</span></div>
+          <div class="record-body">
+            <ul>
+              <li>Permintaan &amp; pelacakan jenis tes</li>
+              <li>Status PENDING → PROCESSING → COMPLETED</li>
+              <li>Riwayat hasil lab per pasien</li>
+            </ul>
+            <div class="entities">Entity: <span class="mono">LabRequest, LabSample, LabResult</span></div>
+          </div>
+        </div>
+        <div class="record">
+          <div class="record-head"><h3>Radiologi</h3><span class="status">imaging</span></div>
+          <div class="record-body">
+            <ul>
+              <li>Penjadwalan &amp; permintaan pemeriksaan</li>
+              <li>Penyimpanan path gambar &amp; temuan</li>
+              <li>Verifikasi radiolog, siap integrasi PACS</li>
+            </ul>
+            <div class="entities">Entity: <span class="mono">RadiologyRequest, RadiologyResult</span></div>
+          </div>
+        </div>
+        <div class="record">
+          <div class="record-head"><h3>Billing</h3><span class="status">invoice</span></div>
+          <div class="record-body">
+            <ul>
+              <li>Pembuatan invoice &amp; pelacakan pembayaran</li>
+              <li>Rekonsiliasi keuangan &amp; laporan revenue</li>
+              <li>Penomoran invoice otomatis</li>
+            </ul>
+            <div class="entities">Entity: <span class="mono">Invoice, Payment, InsuranceClaim</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="database">
+      <div class="kicker">04 — DATABASE</div>
+      <h2>Tabel inti</h2>
+      <p>Skema dirancang normal dengan foreign key antar-modul; berikut ringkasan tabel utama. Skema lengkap ada di <code>DEVELOPMENT_GUIDE.md</code>.</p>
+      <table>
+        <thead>
+          <tr><th>Tabel</th><th>Kolom kunci</th><th>Relasi</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>patients</td><td class="mono-cell">medical_record_no, nik, status</td><td>induk untuk seluruh modul klinis</td></tr>
+          <tr><td>medical_records</td><td class="mono-cell">patient_id, diagnosis, treatment</td><td>→ patients, staff</td></tr>
+          <tr><td>staff</td><td class="mono-cell">position, department, status</td><td>dirujuk oleh medical_records</td></tr>
+          <tr><td>medicines</td><td class="mono-cell">code, quantity, expiry_date</td><td>→ supplier</td></tr>
+          <tr><td>lab_requests</td><td class="mono-cell">test_type, status, result</td><td>→ patients</td></tr>
+          <tr><td>radiology_requests</td><td class="mono-cell">examination_type, image_path</td><td>→ patients</td></tr>
+          <tr><td>invoices</td><td class="mono-cell">invoice_no, total_amount, status</td><td>→ patients</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="architecture">
+      <div class="kicker">05 — ARSITEKTUR</div>
+      <h2>Arsitektur berlapis</h2>
+      <p>Empat lapisan yang jelas memisahkan tampilan, logika bisnis, dan data — memudahkan setiap modul berkembang tanpa saling mengunci.</p>
+      <div class="stack-diagram">
+        <div class="stack-layer">
+          <div class="layer-title">Presentation Layer</div>
+          <div class="layer-desc">Web UI — belum dibangun, direncanakan React/Angular</div>
+        </div>
+        <div class="stack-arrow">↕</div>
+        <div class="stack-layer">
+          <div class="layer-title">API Layer (REST)</div>
+          <div class="layer-desc">Spring Boot Controllers — modul simrs-api</div>
+        </div>
+        <div class="stack-arrow">↕</div>
+        <div class="stack-layer">
+          <div class="layer-title">Business Logic Layer</div>
+          <div class="layer-desc">Services &amp; business rules — modul simrs-core</div>
+        </div>
+        <div class="stack-arrow">↕</div>
+        <div class="stack-layer">
+          <div class="layer-title">Data Access Layer (JPA)</div>
+          <div class="layer-desc">Repository &amp; entity — Hibernate/JPA</div>
+        </div>
+        <div class="stack-arrow">↕</div>
+        <div class="stack-layer">
+          <div class="layer-title">Database Layer</div>
+          <div class="layer-desc">MySQL 8.0, migrasi via Flyway</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="kicker">06 — TEKNOLOGI</div>
+      <h2>Stack yang dipakai</h2>
+      <h3>Backend</h3>
+      <div class="tag-row">
+        <span class="tag">Java 17 LTS</span>
+        <span class="tag">Spring Boot 3.1.5</span>
+        <span class="tag">Spring Data JPA</span>
+        <span class="tag">Spring Security 6.x</span>
+        <span class="tag">MySQL 8.0+</span>
+        <span class="tag">Flyway 9.22.3</span>
+        <span class="tag">Lombok</span>
+        <span class="tag">Springdoc OpenAPI 2.0.4</span>
+        <span class="tag">Maven 3.9</span>
+      </div>
+      <h3>Frontend (rencana)</h3>
+      <div class="tag-row">
+        <span class="tag">React.js / Angular</span>
+        <span class="tag">Bootstrap 5 / Material UI</span>
+        <span class="tag">Axios</span>
+      </div>
+      <h3>Keamanan</h3>
+      <ul>
+        <li>Password hashing dengan BCrypt</li>
+        <li>Pencegahan SQL Injection lewat prepared statement</li>
+        <li>Validasi input &amp; konfigurasi CORS</li>
+        <li style="color:var(--clay);">JWT &amp; RBAC — masih dalam roadmap</li>
+      </ul>
+    </section>
+
+    <section id="api">
+      <div class="kicker">07 — API</div>
+      <h2>Contoh endpoint</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Endpoint</th><th>Deskripsi</th></tr></thead>
+        <tbody>
+          <tr><td class="mono-cell">POST</td><td class="mono-cell">/api/v1/patients</td><td>Registrasi pasien baru</td></tr>
+          <tr><td class="mono-cell">GET</td><td class="mono-cell">/api/v1/patients/{id}</td><td>Detail pasien</td></tr>
+          <tr><td class="mono-cell">GET</td><td class="mono-cell">/api/v1/patients/search</td><td>Cari pasien</td></tr>
+          <tr><td class="mono-cell">POST</td><td class="mono-cell">/api/v1/medical-records</td><td>Buat rekam medis</td></tr>
+          <tr><td class="mono-cell">POST</td><td class="mono-cell">/api/v1/invoices</td><td>Buat invoice</td></tr>
+          <tr><td class="mono-cell">GET</td><td class="mono-cell">/api/v1/medicines/stock</td><td>Cek stok obat</td></tr>
+          <tr><td class="mono-cell">POST</td><td class="mono-cell">/api/v1/lab-requests</td><td>Permintaan tes lab</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:13.5px; color:var(--ink-soft);">Dokumentasi interaktif lengkap tersedia via Swagger UI setelah server berjalan.</p>
+    </section>
+
+    <section id="quickstart">
+      <div class="kicker">08 — MENJALANKAN</div>
+      <h2>Quick start</h2>
+      <pre><span class="cmt"># clone &amp; masuk direktori</span>
+git clone https://github.com/fahmisetiawan63-sudo/SIMRS-Hospital-Management.git
+cd SIMRS-Hospital-Management
+
+<span class="cmt"># build seluruh modul</span>
+mvn clean install
+
+<span class="cmt"># jalankan API server</span>
+cd simrs-api
+mvn spring-boot:run
+
+<span class="cmt"># akses</span>
+http://localhost:8080/api/v1
+http://localhost:8080/swagger-ui.html</pre>
+    </section>
+
+    <section id="roadmap">
+      <div class="kicker">09 — ROADMAP</div>
+      <h2>Lima fase pengembangan</h2>
+      <div class="timeline">
+        <div class="phase" data-phase="1">
+          <h3>Fondasi</h3>
+          <div class="when">Bulan 1–2</div>
+          <ul>
+            <li>Setup proyek &amp; skema database — selesai</li>
+            <li>Modul registrasi pasien, autentikasi dasar</li>
+          </ul>
+        </div>
+        <div class="phase" data-phase="2">
+          <h3>Modul inti</h3>
+          <div class="when">Bulan 3–4</div>
+          <ul>
+            <li>EMR/EHR lengkap, farmasi, laboratorium, radiologi</li>
+          </ul>
+        </div>
+        <div class="phase" data-phase="3">
+          <h3>Fitur lanjutan</h3>
+          <div class="when">Bulan 5</div>
+          <ul>
+            <li>Billing &amp; pembayaran, staf, inventory, reporting</li>
+          </ul>
+        </div>
+        <div class="phase" data-phase="4">
+          <h3>Integrasi &amp; pengujian</h3>
+          <div class="when">Bulan 6</div>
+          <ul>
+            <li>Integration test, audit keamanan, UAT</li>
+          </ul>
+        </div>
+        <div class="phase" data-phase="5">
+          <h3>Pemeliharaan &amp; perluasan</h3>
+          <div class="when">Berkelanjutan</div>
+          <ul>
+            <li>Frontend, aplikasi mobile, analitik, integrasi AI/ML</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <div class="kicker">10 — KONTAK</div>
+      <h2>Dukungan &amp; kontribusi</h2>
+      <p>Project lead: <strong>Fahmi Setiawan</strong> — Organisasi OTTEN 32.</p>
+      <p>Repository: <a href="https://github.com/fahmisetiawan63-sudo/SIMRS-Hospital-Management" target="_blank" rel="noopener">github.com/fahmisetiawan63-sudo/SIMRS-Hospital-Management</a></p>
+      <p>Kontribusi terbuka lewat fork, feature branch, dan pull request mengikuti alur standar GitHub.</p>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  Dokumentasi ini dibangkitkan dari README.md, RANCANGAN_SIMRS_OTTEN_32.md, dan PROJECT_SETUP_SUMMARY.md di repositori.
+  Untuk detail lengkap, lihat berkas asli di dalam repo.
+</footer>
+
+<script>
+  // highlight active sidebar tab based on scroll position
+  const sections = document.querySelectorAll('main section[id]');
+  const tabs = document.querySelectorAll('.chart-tabs a.tab');
+  const setActive = (id) => {
+    tabs.forEach(t => t.classList.toggle('active', t.getAttribute('href') === '#' + id));
+  };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) setActive(entry.target.id);
+    });
+  }, { rootMargin: '-40% 0px -50% 0px', threshold: 0 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

@@ -2,185 +2,201 @@ package com.otten32.core.patient.service.impl;
 
 import com.otten32.common.exception.BusinessException;
 import com.otten32.common.exception.ResourceNotFoundException;
+import com.otten32.common.util.DateTimeUtil;
+import com.otten32.core.patient.dto.CreatePatientRequest;
 import com.otten32.core.patient.dto.PatientDTO;
+import com.otten32.core.patient.dto.UpdatePatientRequest;
 import com.otten32.core.patient.entity.Patient;
 import com.otten32.core.patient.repository.PatientRepository;
-import com.otten32.core.patient.service.PatientService;
+import com.otten32.core.patient.service.IPatientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.LocalDate;
+import java.util.UUID;
 
-/**
- * Implementasi PatientService
- */
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
-public class PatientServiceImpl implements PatientService {
-
+public class PatientServiceImpl implements IPatientService {
+    
     private final PatientRepository patientRepository;
-
+    
     @Override
-    public PatientDTO registerPatient(PatientDTO patientDTO) {
-        log.info("Registering new patient: {}", patientDTO.getFullName());
-
+    @Transactional
+    public PatientDTO createPatient(CreatePatientRequest request) {
+        log.info("Creating new patient with NIK: {}", request.getNik());
+        
         // Check if patient already exists
-        if (patientRepository.findByNik(patientDTO.getNik()).isPresent()) {
-            throw new BusinessException("Pasien dengan NIK " + patientDTO.getNik() + " sudah terdaftar");
+        if (patientRepository.findByNik(request.getNik()).isPresent()) {
+            throw new BusinessException("Patient with NIK " + request.getNik() + " already exists");
         }
-
-        if (patientDTO.getEmail() != null && patientRepository.findByEmail(patientDTO.getEmail()).isPresent()) {
-            throw new BusinessException("Email sudah terdaftar");
+        
+        if (patientRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new BusinessException("Patient with email " + request.getEmail() + " already exists");
         }
-
+        
         // Generate medical record number
         String medicalRecordNo = generateMedicalRecordNo();
-        patientDTO.setMedicalRecordNo(medicalRecordNo);
-
-        // Convert DTO to Entity
-        Patient patient = Patient.builder()
-                .fullName(patientDTO.getFullName())
-                .nik(patientDTO.getNik())
-                .dateOfBirth(patientDTO.getDateOfBirth())
-                .gender(patientDTO.getGender())
-                .bloodType(patientDTO.getBloodType())
-                .phone(patientDTO.getPhone())
-                .email(patientDTO.getEmail())
-                .address(patientDTO.getAddress())
-                .city(patientDTO.getCity())
-                .province(patientDTO.getProvince())
-                .zipCode(patientDTO.getZipCode())
-                .medicalRecordNo(medicalRecordNo)
-                .medicalHistory(patientDTO.getMedicalHistory())
-                .allergies(patientDTO.getAllergies())
-                .build();
-
-        Patient savedPatient = patientRepository.save(patient);
-        log.info("Patient registered successfully with ID: {} and MR No: {}", savedPatient.getId(), medicalRecordNo);
         
-        return convertToDTO(savedPatient);
+        Patient patient = Patient.builder()
+                .medicalRecordNo(medicalRecordNo)
+                .fullName(request.getFullName())
+                .nik(request.getNik())
+                .dateOfBirth(request.getDateOfBirth())
+                .gender(Patient.Gender.valueOf(request.getGender().toUpperCase()))
+                .bloodType(request.getBloodType())
+                .phone(request.getPhone())
+                .email(request.getEmail())
+                .address(request.getAddress())
+                .city(request.getCity())
+                .province(request.getProvince())
+                .status("ACTIVE")
+                .build();
+        
+        Patient savedPatient = patientRepository.save(patient);
+        log.info("Patient created successfully with ID: {}", savedPatient.getId());
+        
+        return mapToDTO(savedPatient);
     }
-
+    
     @Override
     @Transactional(readOnly = true)
     public PatientDTO getPatientById(Long id) {
+        log.info("Fetching patient with ID: {}", id);
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pasien dengan ID " + id + " tidak ditemukan"));
-        return convertToDTO(patient);
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
+        return mapToDTO(patient);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PatientDTO getPatientByNik(String nik) {
-        Patient patient = patientRepository.findByNik(nik)
-                .orElseThrow(() -> new ResourceNotFoundException("Pasien dengan NIK " + nik + " tidak ditemukan"));
-        return convertToDTO(patient);
-    }
-
+    
     @Override
     @Transactional(readOnly = true)
     public PatientDTO getPatientByMedicalRecordNo(String medicalRecordNo) {
+        log.info("Fetching patient with medical record no: {}", medicalRecordNo);
         Patient patient = patientRepository.findByMedicalRecordNo(medicalRecordNo)
-                .orElseThrow(() -> new ResourceNotFoundException("Pasien dengan No. Rekam Medis " + medicalRecordNo + " tidak ditemukan"));
-        return convertToDTO(patient);
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "medicalRecordNo", medicalRecordNo));
+        return mapToDTO(patient);
     }
-
+    
     @Override
-    public PatientDTO updatePatient(Long id, PatientDTO patientDTO) {
+    @Transactional(readOnly = true)
+    public PatientDTO getPatientByNik(String nik) {
+        log.info("Fetching patient with NIK: {}", nik);
+        Patient patient = patientRepository.findByNik(nik)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "nik", nik));
+        return mapToDTO(patient);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PatientDTO> searchPatients(String searchTerm, Pageable pageable) {
+        log.info("Searching patients with term: {}", searchTerm);
+        Page<Patient> patients = patientRepository.searchPatients(searchTerm, pageable);
+        return patients.map(this::mapToDTO);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PatientDTO> getPatientsByStatus(String status, Pageable pageable) {
+        log.info("Fetching patients with status: {}", status);
+        Page<Patient> patients = patientRepository.findByStatus(status, pageable);
+        return patients.map(this::mapToDTO);
+    }
+    
+    @Override
+    @Transactional
+    public PatientDTO updatePatient(Long id, UpdatePatientRequest request) {
         log.info("Updating patient with ID: {}", id);
         
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pasien dengan ID " + id + " tidak ditemukan"));
-
-        // Update fields
-        if (patientDTO.getFullName() != null) patient.setFullName(patientDTO.getFullName());
-        if (patientDTO.getDateOfBirth() != null) patient.setDateOfBirth(patientDTO.getDateOfBirth());
-        if (patientDTO.getGender() != null) patient.setGender(patientDTO.getGender());
-        if (patientDTO.getBloodType() != null) patient.setBloodType(patientDTO.getBloodType());
-        if (patientDTO.getPhone() != null) patient.setPhone(patientDTO.getPhone());
-        if (patientDTO.getEmail() != null) patient.setEmail(patientDTO.getEmail());
-        if (patientDTO.getAddress() != null) patient.setAddress(patientDTO.getAddress());
-        if (patientDTO.getCity() != null) patient.setCity(patientDTO.getCity());
-        if (patientDTO.getProvince() != null) patient.setProvince(patientDTO.getProvince());
-        if (patientDTO.getZipCode() != null) patient.setZipCode(patientDTO.getZipCode());
-        if (patientDTO.getMedicalHistory() != null) patient.setMedicalHistory(patientDTO.getMedicalHistory());
-        if (patientDTO.getAllergies() != null) patient.setAllergies(patientDTO.getAllergies());
-        if (patientDTO.getStatus() != null) patient.setStatus(patientDTO.getStatus());
-
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
+        
+        if (request.getFullName() != null) {
+            patient.setFullName(request.getFullName());
+        }
+        if (request.getDateOfBirth() != null) {
+            patient.setDateOfBirth(request.getDateOfBirth());
+        }
+        if (request.getGender() != null) {
+            patient.setGender(Patient.Gender.valueOf(request.getGender().toUpperCase()));
+        }
+        if (request.getBloodType() != null) {
+            patient.setBloodType(request.getBloodType());
+        }
+        if (request.getPhone() != null) {
+            patient.setPhone(request.getPhone());
+        }
+        if (request.getEmail() != null) {
+            patient.setEmail(request.getEmail());
+        }
+        if (request.getAddress() != null) {
+            patient.setAddress(request.getAddress());
+        }
+        if (request.getCity() != null) {
+            patient.setCity(request.getCity());
+        }
+        if (request.getProvince() != null) {
+            patient.setProvince(request.getProvince());
+        }
+        if (request.getStatus() != null) {
+            patient.setStatus(request.getStatus());
+        }
+        
         Patient updatedPatient = patientRepository.save(patient);
         log.info("Patient updated successfully with ID: {}", id);
         
-        return convertToDTO(updatedPatient);
+        return mapToDTO(updatedPatient);
     }
-
+    
     @Override
-    public void deletePatient(Long id) {
-        log.info("Deleting patient with ID: {}", id);
+    @Transactional
+    public void deactivatePatient(Long id) {
+        log.info("Deactivating patient with ID: {}", id);
         
-        if (!patientRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Pasien dengan ID " + id + " tidak ditemukan");
-        }
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient", "id", id));
         
-        patientRepository.deleteById(id);
-        log.info("Patient deleted successfully with ID: {}", id);
+        patient.setStatus("INACTIVE");
+        patientRepository.save(patient);
+        
+        log.info("Patient deactivated successfully with ID: {}", id);
     }
-
+    
     @Override
     @Transactional(readOnly = true)
-    public List<PatientDTO> searchPatient(String keyword) {
-        log.info("Searching patient with keyword: {}", keyword);
-        List<Patient> patients = patientRepository.searchPatient(keyword);
-        return patients.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    public Page<PatientDTO> getAllPatients(Pageable pageable) {
+        log.info("Fetching all patients");
+        Page<Patient> patients = patientRepository.findAll(pageable);
+        return patients.map(this::mapToDTO);
     }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PatientDTO> getAllPatients() {
-        List<Patient> patients = patientRepository.findAll();
-        return patients.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Generate medical record number (Format: MR-YYYYMMDD-XXXX)
-     */
+    
     private String generateMedicalRecordNo() {
-        String prefix = "MR-" + java.time.LocalDate.now().toString().replace("-", "");
-        long count = patientRepository.count() + 1;
-        return prefix + "-" + String.format("%04d", count % 10000);
+        return "MR-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
-
-    /**
-     * Convert Patient entity to DTO
-     */
-    private PatientDTO convertToDTO(Patient patient) {
+    
+    private PatientDTO mapToDTO(Patient patient) {
         return PatientDTO.builder()
                 .id(patient.getId())
+                .medicalRecordNo(patient.getMedicalRecordNo())
                 .fullName(patient.getFullName())
                 .nik(patient.getNik())
                 .dateOfBirth(patient.getDateOfBirth())
-                .gender(patient.getGender())
+                .gender(patient.getGender().toString())
                 .bloodType(patient.getBloodType())
                 .phone(patient.getPhone())
                 .email(patient.getEmail())
                 .address(patient.getAddress())
                 .city(patient.getCity())
                 .province(patient.getProvince())
-                .zipCode(patient.getZipCode())
-                .medicalRecordNo(patient.getMedicalRecordNo())
-                .medicalHistory(patient.getMedicalHistory())
-                .allergies(patient.getAllergies())
                 .status(patient.getStatus())
                 .createdAt(patient.getCreatedAt())
                 .updatedAt(patient.getUpdatedAt())
+                .createdBy(patient.getCreatedBy())
+                .updatedBy(patient.getUpdatedBy())
                 .build();
     }
 }

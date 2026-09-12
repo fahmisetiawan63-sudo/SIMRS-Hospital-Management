@@ -1,0 +1,64 @@
+.gitignore
+# Maven
+target/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+.m2/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+eclipse.ini
+
+# Build
+build/
+.gradle/
+out/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Log files
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Application properties
+application-dev.properties
+application-test.properties
+application-prod.properties
+
+# Node (if using frontend build)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Temp files
+*.tmp
+*.bak
+*.swp
+*~
